@@ -122,4 +122,17 @@ await github.rest.issues.createComment({
   body: announcementBody
 });
 
+// 5. Close the raffle issue to indicate completion
+await github.rest.issues.update({
+  owner,
+  repo,
+  issue_number,
+  state: 'closed',
+  state_reason: 'completed'
+});
+
+console.log(`✅ Raffle #${issue_number} completed successfully!`);
+console.log(`🏆 Winners: ${winners.join(', ')}`);
+console.log(`📊 Total participants: ${totalParticipants}`);
+
 })(); // End of async wrapper

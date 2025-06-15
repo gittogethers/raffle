@@ -1,7 +1,0 @@
-
-# This file prevents users from creating blank issues and directs them to the issue template.
-blank_issues_enabled: false
-contact_links:
-  - name: New Raffle Event
-    url: ../../issues/new?template=raffle-event.yml
-    about: Create a new raffle using the event template.
