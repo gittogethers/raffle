@@ -33,73 +33,12 @@ jobs:
             echo "Repository already configured"
           fi
 
+      - name: "Setup Node.js"
+        if: steps.check_setup.outputs.setup_needed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
       - name: "Configure Repository"
         if: steps.check_setup.outputs.setup_needed == 'true'
-        run: |
-          # Get repository information
-          OWNER="${{ github.repository_owner }}"
-          REPO="${{ github.event.repository.name }}"
-          REPO_URL="https://github.com/${OWNER}/${REPO}"
-          
-          echo "Setting up repository: ${OWNER}/${REPO}"
-          
-          # Update README.md with correct repository information
-          sed -i.bak "s|gittogethers/raffle|${OWNER}/${REPO}|g" README.md
-          sed -i.bak "s|https://github.com/gittogethers/raffle|${REPO_URL}|g" README.md
-          
-          # Remove template-specific sections from README.md
-          # Remove the "Use this template" badge line
-          sed -i.bak '/\[\[!Use this template\]\]/d' README.md
-          sed -i.bak '/\[!\[Use this template\]\]/d' README.md
-          
-          # Remove Features section (from ## ✨ Features to next ## section)
-          sed -i.bak '/^## ✨ Features$/,/^## /{ /^## ✨ Features$/d; /^## /!d; }' README.md
-          
-          # Remove Quick Start section (from ## 🚀 Quick Start to next ## section)
-          sed -i.bak '/^## 🚀 Quick Start$/,/^## /{ /^## 🚀 Quick Start$/d; /^## /!d; }' README.md
-          
-          # Add quick action links after the title
-          cat > /tmp/quick_actions.md << 'EOF'
-
-## 🎯 Quick Actions
-
-- **[📝 Create New Raffle](${REPO_URL}/issues/new?template=raffle-event.yml)** - Start a new raffle event
-- **[🏆 Select Winners](${REPO_URL}/actions/workflows/winner-selection.yml)** - Pick winners for existing raffles
-EOF
-          
-          # Insert the quick actions after the title
-          sed -i.bak '/^# Community Raffle$/r /tmp/quick_actions.md' README.md
-          
-          # Clean up backup files and temporary file
-          find . -name "*.bak" -delete
-          rm -f /tmp/quick_actions.md
-          
-          # Configure git
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          
-          # Commit changes
-          git add .
-          git commit -m "🔧 Auto-configure repository from template
-
-          - Updated repository references in README.md  
-          - Removed template-specific sections (Use Template badge, Features, Quick Start)
-          - Added Quick Actions section with direct links
-          - Repository configured for: ${OWNER}/${REPO}"
-          
-          # Push changes
-          git push
-
-      - name: "Remove Template Setup Workflow"
-        run: |
-          # Remove this workflow file so it doesn't run again
-          rm -f .github/workflows/template-setup.yml
-          
-          # Configure git
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          
-          # Commit the removal
-          git add .
-          git commit -m "Setup complete" || echo "No changes to commit"
-          git push || echo "Nothing to push"
+        run: node .github/workflows/template-setup.js

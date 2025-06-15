@@ -41,7 +41,7 @@ if (!numWinnersMatch) {
     core.setFailed("Could not determine the number of winners from the issue body. Please ensure the issue was created using the raffle template.");
     return;
   }
-  numWinners = parseInt(numWinnersMatch[1], 10);
+  numWinners = parseInt(altMatch[1], 10);
 } else {
   numWinners = parseInt(numWinnersMatch[1], 10);
 }
