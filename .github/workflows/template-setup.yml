@@ -59,19 +59,23 @@ jobs:
           sed -i.bak '/^## 🚀 Quick Start$/,/^## /{ /^## 🚀 Quick Start$/d; /^## /!d; }' README.md
           
           # Add quick action links after the title
-          sed -i.bak '/^# Community Raffle$/a\
-\
-## 🎯 Quick Actions\
-\
-- **[📝 Create New Raffle]('"${REPO_URL}"'/issues/new?template=raffle-event.yml)** - Start a new raffle event\
-- **[🏆 Select Winners]('"${REPO_URL}"'/actions/workflows/winner-selection.yml)** - Pick winners for existing raffles\
-' README.md
+          QUICK_ACTIONS="
+
+## 🎯 Quick Actions
+
+- **[📝 Create New Raffle](${REPO_URL}/issues/new?template=raffle-event.yml)** - Start a new raffle event
+- **[🏆 Select Winners](${REPO_URL}/actions/workflows/winner-selection.yml)** - Pick winners for existing raffles
+"
           
-          # Update config.yml with absolute repository path for reliability
-          sed -i.bak "s|../../issues/new|https://github.com/${OWNER}/${REPO}/issues/new|g" .github/config.yml
+          # Create temp file with the quick actions content
+          echo "$QUICK_ACTIONS" > /tmp/quick_actions.md
           
-          # Clean up backup files
+          # Insert the quick actions after the title
+          sed -i.bak '/^# Community Raffle$/r /tmp/quick_actions.md' README.md
+          
+          # Clean up backup files and temporary file
           find . -name "*.bak" -delete
+          rm -f /tmp/quick_actions.md
           
           # Configure git
           git config --local user.email "action@github.com"
@@ -84,7 +88,6 @@ jobs:
           - Updated repository references in README.md  
           - Removed template-specific sections (Use Template badge, Features, Quick Start)
           - Added Quick Actions section with direct links
-          - Updated issue template links in config.yml
           - Repository configured for: ${OWNER}/${REPO}"
           
           # Push changes

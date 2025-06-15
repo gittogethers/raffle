@@ -3,6 +3,12 @@
 // Get the selected raffle from workflow input
 const selectedRaffle = context.payload.inputs.raffle_issue;
 
+// Check if "No raffles available yet" was selected
+if (selectedRaffle === "No raffles available yet") {
+  core.setFailed("Please create a raffle first before trying to select winners.");
+  return;
+}
+
 // Parse issue number from the selected option (format: "#123 - Event Name")
 const issueMatch = selectedRaffle.match(/^#(\d+)/);
 if (!issueMatch) {
@@ -35,9 +41,15 @@ if (!numWinnersMatch) {
     core.setFailed("Could not determine the number of winners from the issue body. Please ensure the issue was created using the raffle template.");
     return;
   }
-  numWinners = parseInt(altMatch[1], 10);
+  numWinners = parseInt(numWinnersMatch[1], 10);
 } else {
   numWinners = parseInt(numWinnersMatch[1], 10);
+}
+
+// Validate number of winners
+if (isNaN(numWinners) || numWinners < 1) {
+  core.setFailed("Invalid number of winners. Must be a positive number.");
+  return;
 }
 
 // 2. Fetch all comments to find participants
@@ -62,13 +74,34 @@ for (const comment of comments) {
 
 const participantList = Array.from(participants);
 const totalParticipants = participantList.length;
+
+// Early return if no participants
 if (participantList.length === 0) {
   await github.rest.issues.createComment({
     owner,
     repo,
     issue_number,
-    body: "### Raffle Result\n\nThere were no participants in this raffle."
+    body: "### Raffle Result\n\n❌ There were no participants in this raffle."
   });
+  
+  // Still close the issue and update status
+  const updatedBody = issue.body.replace(
+    /## 📋 Raffle Status\s*\n- \*\*Status\*\*: 🟢 Active\s*\n- \*\*Participants\*\*: Will be counted from comments below/,
+    `## 📋 Raffle Status
+- **Status**: 🔴 Completed
+- **Winners**: 0
+- **Total Participants**: 0`
+  );
+  
+  await github.rest.issues.update({
+    owner,
+    repo,
+    issue_number,
+    state: 'closed',
+    state_reason: 'completed', 
+    body: updatedBody
+  });
+  
   return;
 }
 
@@ -122,13 +155,23 @@ await github.rest.issues.createComment({
   body: announcementBody
 });
 
-// 5. Close the raffle issue to indicate completion
+// Update the issue body to reflect completed status
+const updatedBody = issue.body.replace(
+  /## 📋 Raffle Status\s*\n- \*\*Status\*\*: 🟢 Active\s*\n- \*\*Participants\*\*: Will be counted from comments below/,
+  `## 📋 Raffle Status
+- **Status**: 🔴 Completed
+- **Winners**: ${winners.length}
+- **Total Participants**: ${totalParticipants}`
+);
+
+// 5. Update and close the raffle issue to indicate completion
 await github.rest.issues.update({
   owner,
   repo,
   issue_number,
   state: 'closed',
-  state_reason: 'completed'
+  state_reason: 'completed',
+  body: updatedBody
 });
 
 console.log(`✅ Raffle #${issue_number} completed successfully!`);
