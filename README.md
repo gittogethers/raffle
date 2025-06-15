@@ -1,5 +1,5 @@
 
-# GitHub-Powered Raffle
+# Community Raffle
 
 [![Use this template](https://img.shields.io/badge/--Use%20this%20template-blue?style=for-the-badge&logo=github)](https://github.com/gittogethers/raffle/generate)
 
@@ -7,42 +7,49 @@ A template repository to run fair, transparent, and automated raffles for your c
 
 ## ✨ Features
 
-- **Zero Hosting Costs**: Runs entirely on the GitHub platform.
-- **Transparent & Fair**: All entries and winner selections are public in the issue comments.
-- **Fully Automated**: QR code generation and winner selection are handled by GitHub Actions.
-- **Easy to Use**: Simple issue form to create new raffles.
-- **Community Engagement**: Encourages interaction directly on GitHub.
+- **Zero Hosting Costs**: Runs entirely on the GitHub platform
+- **Transparent & Fair**: All entries and winner selections are public in the issue comments
+- **Fully Automated**: QR code generation and winner selection are handled by GitHub Actions
+- **Easy to Use**: Simple issue form to create new raffles
+- **Community Engagement**: Encourages interaction directly on GitHub
 
-## 🚀 How to Use
+## 🚀 Quick Start
 
-1.  **Use This Template**: Click the "Use this template" button at the top of this repository to create your own copy. Make sure to check "Include all branches".
+1. **Use This Template**: Click the "Use this template" button above and name your repository `raffle`
 
-2.  **Enable GitHub Actions**: In your newly created repository, go to `Settings` > `Actions` > `General`. Under "Actions permissions," select "**Allow all actions and reusable workflows**" and click `Save`.
+2. **Enable GitHub Actions**: Go to `Settings` > `Actions` > `General` and select "**Allow all actions and reusable workflows**"
 
-3.  **Create a Raffle**:
-    *   Go to the `Issues` tab of your repository.
-    *   Click `New issue`.
-    *   Select the `🎉 New Raffle Event` template.
-    *   Fill out the form with your event details and submit it.
+3. **Create Your First Raffle**:
+   - Go to the `Issues` tab
+   - Click `New issue` 
+   - Select the `🎉 New Raffle Event` template
+   - Fill out the form and submit
 
-## ⚙️ How It Works
+## 📋 How to Run a Raffle
 
-1.  **Raffle Creation**: When you create an issue using the raffle template, it gets labeled as a `raffle`.
+### Creating a Raffle:
+Fill out the raffle template with:
+- **Event Name**: Descriptive name for your raffle
+- **Number of Winners**: How many people will win
+- **Prize Details**: What winners will receive
 
-2.  **Event Preparation**: A GitHub Action triggers, automatically updating the issue title with the event name and posting a comment with a QR code. This QR code links directly to the issue, making it easy for participants to join.
+### What Happens Automatically:
+- ✅ Issue title gets updated with your event name
+- ✅ QR code is generated for easy sharing
+- ✅ Ready to accept participants via comments
 
-3.  **Participation**: Community members enter the raffle by commenting on the issue.
+### Selecting Winners:
+1. Go to the `Actions` tab
+2. Find "Raffle Winner Selection"
+3. Click "Run workflow"
+4. Select your raffle from the dropdown menu
+5. Winners are announced automatically
 
-4.  **Winner Selection**: Once the entry period is over, you can manually trigger the winner selection workflow:
-    *   Go to the `Actions` tab.
-    *   Select `Raffle Winner Selection` from the sidebar.
-    *   Click `Run workflow`.
-    *   Enter the issue number of your raffle and click `Run workflow`.
-    *   The action will randomly select the specified number of winners from the participants and post a comment announcing them.
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/gittogethers/raffle/issues).
+### Tips:
+- Share the issue URL or QR code with participants
+- Set clear entry deadlines in your raffle description
+- Pin the raffle issue to make it visible
+- Close the issue after distributing prizes
 
 ## 📄 License
 

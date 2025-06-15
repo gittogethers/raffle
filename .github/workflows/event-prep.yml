@@ -9,47 +9,18 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      contents: write
     steps:
-      - name: "Rename Issue Title and Post QR Code"
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: "Prepare Event and Update Dropdown"
         uses: actions/github-script@v7
         with:
           script: |
-            const issue = context.payload.issue;
-            const issueUrl = issue.html_url;
-            
-            // Extract event name from issue body if available
-            // GitHub issue forms render as: ### Event Name\n<value>
-            const eventNameRegex = /### Event Name\s*\r?\n\s*(.+)/;
-            const eventNameMatch = issue.body.match(eventNameRegex);
-            let newTitle = issue.title;
-            
-            if (eventNameMatch && eventNameMatch[1].trim() !== '_No response_') {
-              const eventName = eventNameMatch[1].trim();
-              newTitle = `🎉 Raffle: ${eventName}`;
-              
-              // Update the issue title
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                title: newTitle
-              });
-            }
-            
-            // Generate QR code
-            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${issueUrl}`;
-            
-            const commentBody = `
-            ### 🎉 Join the Raffle!
-            
-            Scan the QR code below or click [this link](${issueUrl}) to participate. Good luck!
-            
-            ![QR Code](${qrCodeUrl})
-            `;
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: commentBody
-            });
+            const fs = require('fs');
+            const script = fs.readFileSync('.github/workflows/event-prep.js', 'utf8');
+            eval(script);

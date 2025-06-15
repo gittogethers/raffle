@@ -1,8 +1,7 @@
 
 name: "🎉 New Raffle Event"
 description: "Set up a new raffle for your community"
-title: "[Raffle]: "
-labels: ["raffle", "event"]
+title: "Don't Change - Will Update Automatically"
 body:
   - type: markdown
     attributes:
