@@ -59,12 +59,12 @@ jobs:
           sed -i.bak '/^## 🚀 Quick Start$/,/^## /{ /^## 🚀 Quick Start$/d; /^## /!d; }' README.md
           
           # Add quick action links after the title
-          sed -i.bak '/^# Community Raffle$/a\\
-\\
-## 🎯 Quick Actions\\
-\\
-- **[📝 Create New Raffle]('"${REPO_URL}"'/issues/new?template=raffle-event.yml)** - Start a new raffle event\\
-- **[🏆 Select Winners]('"${REPO_URL}"'/actions/workflows/winner-selection.yml)** - Pick winners for existing raffles\\
+          sed -i.bak '/^# Community Raffle$/a\
+\
+## 🎯 Quick Actions\
+\
+- **[📝 Create New Raffle]('"${REPO_URL}"'/issues/new?template=raffle-event.yml)** - Start a new raffle event\
+- **[🏆 Select Winners]('"${REPO_URL}"'/actions/workflows/winner-selection.yml)** - Pick winners for existing raffles\
 ' README.md
           
           # Update config.yml with absolute repository path for reliability
