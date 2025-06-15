@@ -86,7 +86,7 @@ if (participantList.length === 0) {
   
   // Still close the issue and update status
   const updatedBody = issue.body.replace(
-    /## 📋 Raffle Status\s*\n- \*\*Status\*\*: 🟢 Active\s*\n- \*\*Participants\*\*: Will be counted from comments below/,
+    /## 📋 Raffle Status[\s\S]*?- \*\*Status\*\*: 🟢 Active[\s\S]*?- \*\*Participants\*\*: Will be counted from comments below/,
     `## 📋 Raffle Status
 - **Status**: 🔴 Completed
 - **Winners**: 0
@@ -157,7 +157,7 @@ await github.rest.issues.createComment({
 
 // Update the issue body to reflect completed status
 const updatedBody = issue.body.replace(
-  /## 📋 Raffle Status\s*\n- \*\*Status\*\*: 🟢 Active\s*\n- \*\*Participants\*\*: Will be counted from comments below/,
+  /## 📋 Raffle Status[\s\S]*?- \*\*Status\*\*: 🟢 Active[\s\S]*?- \*\*Participants\*\*: Will be counted from comments below/,
   `## 📋 Raffle Status
 - **Status**: 🔴 Completed
 - **Winners**: ${winners.length}

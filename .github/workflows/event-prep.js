@@ -39,7 +39,7 @@ if (eventNameMatch && eventNameMatch[1].trim() !== '_No response_' && eventNameM
   // Create a clean, formatted issue body
   const newBody = `# 🎉 ${eventNameValue}
 
-## 📋 Raffle Details
+## 📋 Raffle Status
 - **Event**: ${eventNameValue}
 - **Number of Winners**: ${winnersValue}
 - **Prize**: ${prizeValue}
@@ -77,24 +77,39 @@ try {
   // Read the current winner selection workflow
   const workflowPath = '.github/workflows/winner-selection.yml';
   let workflowContent = fs.readFileSync(workflowPath, 'utf8');
+  console.log('Current workflow content length:', workflowContent.length);
 
   // Find the options section and add the new raffle
-  const optionsRegex = /(options:\s*\n(?:\s*-\s*"[^"]*"\s*\n)*)/;
-  const optionsMatch = workflowContent.match(optionsRegex);
+  const optionsStartRegex = /(\s+options:\s*\n)/;
+  const optionsStartMatch = workflowContent.match(optionsStartRegex);
+  console.log('Options start match found:', !!optionsStartMatch);
 
-  if (optionsMatch) {
-    let optionsSection = optionsMatch[1];
+  if (optionsStartMatch) {
+    // Find the end of the options section (next non-indented line or end of jobs section)
+    const optionsStart = workflowContent.indexOf(optionsStartMatch[0]) + optionsStartMatch[0].length;
+    const remainingContent = workflowContent.slice(optionsStart);
+    
+    // Find where options section ends (when indentation decreases or hits "jobs:")
+    const optionsEndMatch = remainingContent.match(/\n(?=\S|jobs:)/);
+    const optionsEnd = optionsEndMatch ? optionsStart + optionsEndMatch.index : workflowContent.length;
+    
+    // Extract current options
+    let optionsContent = workflowContent.slice(optionsStart, optionsEnd);
+    console.log('Current options content:', optionsContent.trim());
     
     // Remove the "No raffles available yet" option if it exists
-    if (optionsSection.includes('"No raffles available yet"')) {
-      optionsSection = optionsSection.replace(/\s*-\s*"No raffles available yet"\s*\n/, '');
+    if (optionsContent.includes('"No raffles available yet"')) {
+      optionsContent = optionsContent.replace(/\s*-\s*"No raffles available yet"\s*\n?/, '');
+      console.log('Removed default option');
     }
     
-    // Add the new option (ensure proper indentation - 10 spaces to match YAML structure)
-    optionsSection += `          - "#${issue.number} - ${eventName}"\n`;
+    // Add the new option with proper indentation (10 spaces to match YAML structure)
+    const newOption = `          - "#${issue.number} - ${eventName}"\n`;
+    optionsContent += newOption;
+    console.log('Added new option:', newOption.trim());
     
-    // Replace the options section in the workflow
-    workflowContent = workflowContent.replace(optionsRegex, optionsSection);
+    // Replace the options content in the workflow
+    workflowContent = workflowContent.slice(0, optionsStart) + optionsContent + workflowContent.slice(optionsEnd);
     
     // Write the updated workflow back
     fs.writeFileSync(workflowPath, workflowContent);
@@ -123,6 +138,8 @@ try {
     } catch (error) {
       console.log('No changes to commit or push failed:', error.message);
     }
+  } else {
+    console.log('Could not find options section in winner-selection.yml');
   }
 } catch (error) {
   console.log('Failed to update dropdown:', error.message);
