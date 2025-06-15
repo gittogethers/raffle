@@ -1,0 +1,110 @@
+
+name: "Raffle Winner Selection"
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "The number of the raffle issue"
+        required: true
+
+jobs:
+  pick-winners:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: "Pick and Announce Winners"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_number = ${{ github.event.inputs.issue_number }};
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // 1. Get issue details to find number of winners
+            const { data: issue } = await github.rest.issues.get({
+              owner,
+              repo,
+              issue_number,
+            });
+
+            // GitHub issue forms create markdown like this: 
+            // ### Number of Winners
+            // 3
+            const numWinnersRegex = /### Number of Winners\s*\r?\n\s*(\d+)/;
+            const numWinnersMatch = issue.body.match(numWinnersRegex);
+            let numWinners;
+            if (!numWinnersMatch) {
+              // Try alternative format in case of different rendering
+              const altRegex = /Number of Winners[:\s]*(\d+)/i;
+              const altMatch = issue.body.match(altRegex);
+              if (!altMatch) {
+                core.setFailed("Could not determine the number of winners from the issue body. Please ensure the issue was created using the raffle template.");
+                return;
+              }
+              numWinners = parseInt(altMatch[1], 10);
+            } else {
+              numWinners = parseInt(numWinnersMatch[1], 10);
+            }
+
+            // 2. Fetch all comments to find participants
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+            });
+
+            const issueAuthor = issue.user.login;
+            const participants = new Set();
+            
+            for (const comment of comments) {
+              const user = comment.user.login;
+              
+              // Exclude the issue author and bots
+              if (user !== issueAuthor && !user.endsWith('[bot]')) {
+                // Any comment qualifies for participation
+                participants.add(user);
+              }
+            }
+
+            const participantList = Array.from(participants);
+            const totalParticipants = participantList.length;
+            if (participantList.length === 0) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: "### Raffle Result\n\nThere were no participants in this raffle."
+              });
+              return;
+            }
+
+            // 3. Select winners
+            const winners = [];
+            const count = Math.min(numWinners, participantList.length);
+            for (let i = 0; i < count; i++) {
+              const winnerIndex = Math.floor(Math.random() * participantList.length);
+              winners.push(participantList.splice(winnerIndex, 1)[0]);
+            }
+
+            // 4. Announce winners
+            let winnerMentions = winners.map(w => `@${w}`).join(', ');
+            
+            const announcementBody = `
+            ### 🏆 Raffle Winners Announcement! 🏆
+            
+            Congratulations to our lucky winner(s): ${winnerMentions}!
+            
+            Thank you to everyone who participated. An organizer will be in touch with the winners shortly regarding the prizes.
+            
+            Total Participants: ${totalParticipants}
+            `;
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body: announcementBody
+            });

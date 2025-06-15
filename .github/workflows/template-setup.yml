@@ -1,0 +1,133 @@
+name: "Template Setup"
+
+on:
+  push:
+    branches: [main, master]
+  create:
+
+jobs:
+  setup-template:
+    # Only run if this is a new repository created from template
+    if: github.run_number <= 3 && github.repository != 'gittogethers/raffle'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+      issues: write
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: "Check if setup is needed"
+        id: check_setup
+        run: |
+          # Check if this repository still has template references
+          if grep -q "gittogethers/raffle" README.md; then
+            echo "setup_needed=true" >> $GITHUB_OUTPUT
+            echo "Repository needs configuration"
+          else
+            echo "setup_needed=false" >> $GITHUB_OUTPUT
+            echo "Repository already configured"
+          fi
+
+      - name: "Configure Repository"
+        if: steps.check_setup.outputs.setup_needed == 'true'
+        run: |
+          # Get repository information
+          OWNER="${{ github.repository_owner }}"
+          REPO="${{ github.event.repository.name }}"
+          REPO_URL="https://github.com/${OWNER}/${REPO}"
+          
+          echo "Setting up repository: ${OWNER}/${REPO}"
+          
+          # Update README.md with correct repository information
+          sed -i.bak "s|gittogethers/raffle|${OWNER}/${REPO}|g" README.md
+          sed -i.bak "s|https://github.com/gittogethers/raffle|${REPO_URL}|g" README.md
+          
+          # Update config.yml with absolute repository path for reliability
+          sed -i.bak "s|../../issues/new|https://github.com/${OWNER}/${REPO}/issues/new|g" .github/config.yml
+          
+          # Clean up backup files
+          find . -name "*.bak" -delete
+          
+          # Configure git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Commit changes
+          git add .
+          git commit -m "🔧 Auto-configure repository from template
+
+          - Updated repository references in README.md  
+          - Updated issue template links in config.yml
+          - Repository configured for: ${OWNER}/${REPO}"
+          
+          # Push changes
+          git push
+
+      - name: "Create Welcome Issue"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            
+            const welcomeBody = `
+            # 🎉 Welcome to your GitHub-Powered Raffle Repository!
+            
+            Your repository has been automatically configured and is ready to use!
+            
+            ## ✅ What was configured:
+            - Repository references updated in README.md
+            - Issue template links configured for your repository
+            - All workflows are ready to run
+            
+            ## 🚀 Next Steps:
+            1. **Enable GitHub Actions** (if not already enabled):
+               - Go to \`Settings\` > \`Actions\` > \`General\`
+               - Under "Actions permissions," select "**Allow all actions and reusable workflows**"
+               - Click \`Save\`
+            
+            2. **Create your first raffle**:
+               - Go to the [\`Issues\` tab](https://github.com/${owner}/${repo}/issues)
+               - Click \`New issue\`
+               - Select the \`🎉 New Raffle Event\` template
+               - Fill out the form and submit!
+            
+            ## 📚 How it works:
+            - **Create raffles** using the issue template
+            - **QR codes** are automatically generated for easy sharing
+            - **Winners** are selected randomly using GitHub Actions
+            - Everything is **transparent** and **fair**!
+            
+            ---
+            
+            **Happy raffling!** 🎲
+            
+            *This issue was created automatically by the template setup. You can safely close it once you've read the information.*
+            `;
+            
+            await github.rest.issues.create({
+              owner: owner,
+              repo: repo,
+              title: "🎉 Repository Setup Complete - Welcome!",
+              body: welcomeBody,
+              labels: ["setup", "welcome"]
+            });
+
+      - name: "Remove Template Setup Workflow"
+        run: |
+          # Remove this workflow file so it doesn't run again
+          rm -f .github/workflows/template-setup.yml
+          
+          # Configure git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Commit the removal
+          git add .
+          git commit -m "🧹 Remove template setup workflow (setup complete)" || echo "No changes to commit"
+          git push || echo "Nothing to push"
