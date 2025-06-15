@@ -59,16 +59,13 @@ jobs:
           sed -i.bak '/^## 🚀 Quick Start$/,/^## /{ /^## 🚀 Quick Start$/d; /^## /!d; }' README.md
           
           # Add quick action links after the title
-          QUICK_ACTIONS="
+          cat > /tmp/quick_actions.md << 'EOF'
 
 ## 🎯 Quick Actions
 
 - **[📝 Create New Raffle](${REPO_URL}/issues/new?template=raffle-event.yml)** - Start a new raffle event
 - **[🏆 Select Winners](${REPO_URL}/actions/workflows/winner-selection.yml)** - Pick winners for existing raffles
-"
-          
-          # Create temp file with the quick actions content
-          echo "$QUICK_ACTIONS" > /tmp/quick_actions.md
+EOF
           
           # Insert the quick actions after the title
           sed -i.bak '/^# Community Raffle$/r /tmp/quick_actions.md' README.md
