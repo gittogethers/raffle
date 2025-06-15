@@ -25,27 +25,50 @@ const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data
 if (eventNameMatch && eventNameMatch[1].trim() !== '_No response_' && eventNameMatch[1].trim() !== '') {
   newTitle = `🎉 Raffle: ${eventName}`;
   
-  // Update the issue title and body with QR code included
+  // Extract form data for a clean issue body
+  const eventNameRegex = /### Event Name\s*\r?\n\s*(.+)/;
+  const winnersRegex = /### Number of Winners\s*\r?\n\s*(.+)/;
+  const prizeRegex = /### Prize Details\s*\r?\n\s*([\s\S]*?)(?=###|$)/;
+  const descriptionRegex = /### Event Description\s*\r?\n\s*([\s\S]*?)(?=###|$)/;
+  
+  const eventNameValue = issue.body.match(eventNameRegex)?.[1]?.trim() || eventName;
+  const winnersValue = issue.body.match(winnersRegex)?.[1]?.trim() || '1';
+  const prizeValue = issue.body.match(prizeRegex)?.[1]?.trim() || 'Prize details not specified';
+  const descriptionValue = issue.body.match(descriptionRegex)?.[1]?.trim() || 'Event description not provided';
+  
+  // Create a clean, formatted issue body
+  const newBody = `# 🎉 ${eventNameValue}
+
+## 📋 Raffle Details
+- **Event**: ${eventNameValue}
+- **Number of Winners**: ${winnersValue}
+- **Prize**: ${prizeValue}
+- **Status**: 🟢 Active
+- **Participants**: Will be counted from comments below
+
+## 📝 Description
+${descriptionValue}
+
+## 🎉 How to Participate
+
+**It's simple!** Just leave a comment on this issue to enter the raffle. 
+
+Scan the QR code below or share [this link](${issueUrl}) with others to join:
+
+![QR Code](${qrCodeUrl})
+
+**Good luck to everyone! 🍀**
+
+---
+*This raffle was created using the GitHub Raffle Template. Winners will be selected randomly using GitHub Actions.*`;
+  
+  // Update the issue title and body with clean, formatted content
   await github.rest.issues.update({
     owner: context.repo.owner,
     repo: context.repo.repo,
     issue_number: context.issue.number,
     title: newTitle,
-    body: `${issue.body}
-
----
-
-## 📋 Raffle Status
-- **Status**: 🟢 Active
-- **Participants**: Will be counted from comments below
-
-## 🎉 Join the Raffle!
-
-Scan the QR code below or click [this link](${issueUrl}) to participate. Good luck!
-
-![QR Code](${qrCodeUrl})
-
-**To participate**: Simply leave a comment on this issue. Good luck! 🍀`
+    body: newBody
   });
 }
 

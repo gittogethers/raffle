@@ -26,9 +26,9 @@ const { execSync } = require('child_process');
       .replace(/https:\/\/github\.com\/gittogethers\/raffle/g, repoUrl);
     
     // Remove template-specific sections from README.md
-    // Remove the "Use this template" badge lines
+    // Remove the "Use this template" badge line
     updatedReadme = updatedReadme
-      .replace(/\[\[!Use this template\]\][^\n]*\n?/g, '')
+      .replace(/\[\[Use this template\]\][^\n]*\n?/g, '')
       .replace(/\[!\[Use this template\]\][^\n]*\n?/g, '');
     
     // Remove Features section (from ## ✨ Features to next ## section)
@@ -37,17 +37,20 @@ const { execSync } = require('child_process');
     // Remove Quick Start section (from ## 🚀 Quick Start to next ## section)
     updatedReadme = updatedReadme.replace(/^## 🚀 Quick Start$[\s\S]*?(?=^## )/m, '');
     
-    // Add quick action links after the title
+    // Create improved quick action links
     const quickActions = `
-
 ## 🎯 Quick Actions
 
-- **[📝 Create New Raffle](${repoUrl}/issues/new?template=raffle-event.yml)** - Start a new raffle event
-- **[🏆 Select Winners](${repoUrl}/actions/workflows/winner-selection.yml)** - Pick winners for existing raffles
+Ready to get started? Use these quick links:
+
+- **[📝 Create New Raffle](${repoUrl}/issues/new?template=raffle-event.yml)** - Start a new raffle event for your community
+- **[🏆 Select Winners](${repoUrl}/actions/workflows/winner-selection.yml)** - Run the automated winner selection process
+- **[📊 View Past Raffles](${repoUrl}/issues?q=is%3Aissue+label%3Araffle)** - Browse completed raffle events
+
 `;
     
-    // Insert the quick actions after the title
-    updatedReadme = updatedReadme.replace(/^# Community Raffle$/m, `# Community Raffle${quickActions}`);
+    // Insert the quick actions before the License section
+    updatedReadme = updatedReadme.replace(/^## 📄 License$/m, `${quickActions}## 📄 License`);
     
     // Write the updated README.md
     fs.writeFileSync('README.md', updatedReadme);
@@ -65,7 +68,7 @@ const { execSync } = require('child_process');
 
 - Updated repository references in README.md  
 - Removed template-specific sections (Use Template badge, Features, Quick Start)
-- Added Quick Actions section with direct links
+- Added Quick Actions section before License section
 - Repository configured for: ${owner}/${repo}`;
     
     execSync(`git commit -m "${commitMessage}"`, { stdio: 'inherit' });
